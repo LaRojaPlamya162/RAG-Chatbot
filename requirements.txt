@@ -1,0 +1,35 @@
+# === Transformers & quantization (cập nhật 11/2025) ===
+torch
+torchvision
+torchaudio
+#--index-url https://download.pytorch.org/whl/cu121  # Bỏ nếu CPU only
+
+transformers  # Không dùng 4.45.2, dùng stable này
+accelerate    # Update lớn từ 0.34.x
+bitsandbytes  # Stable, nếu cần 4-bit mới: dùng preview từ GitHub
+einops       # Vẫn ổn
+safetensors    # Vẫn ổn
+
+# Phần còn lại giữ nguyên từ list trước của bạn
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+langchain-ollama
+langchain-huggingface
+sentence-transformers
+huggingface-hub
+chromadb
+faiss-cpu
+pypdf
+unstructured[all-docs]
+rapidocr-onnxruntime
+beautifulsoup4
+requests
+fastapi
+uvicorn[standard]
+gradio
+streamlit
+pydantic
+python-dotenv
+tiktoken
