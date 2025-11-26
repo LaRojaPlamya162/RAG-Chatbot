@@ -3,7 +3,7 @@ from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from file_loader import PDFLoader
+from src.base.file_loader import PDFLoader
 
 class RAGVectorDB:
     def __init__(self, documents: List[Document]):
@@ -12,7 +12,7 @@ class RAGVectorDB:
         self.vector_store = InMemoryVectorStore(embedding=self.embeddings)
 
     def chunking(self, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
-        """Chia nhỏ tài liệu thành các đoạn nhỏ hơn để dễ dàng xử lý."""
+        """Chunk documents into smaller pieces from better retrieval."""
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
@@ -28,11 +28,9 @@ class RAGVectorDB:
         return chunked_docs
 
     def build_vector_store(self):
-        """Xây dựng vector store từ các đoạn tài liệu đã chia nhỏ."""
+        """Create vector store from chunked documents."""
         chunked_docs = self.chunking()
         self.vector_store.add_documents(chunked_docs)
-        print(f"Đã thêm {len(chunked_docs)} đoạn tài liệu vào vector store.")
-        print(chunked_docs[0].page_content[:500])  # In ra 500 ký tự đầu tiên của đoạn đầu tiên
 
 
 if __name__ == "__main__":

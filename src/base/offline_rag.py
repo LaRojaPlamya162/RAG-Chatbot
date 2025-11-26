@@ -1,8 +1,8 @@
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
-from file_loader import PDFLoader
-from vector_db import RAGVectorDB
+from src.base.file_loader import PDFLoader
+from src.base.vector_db import RAGVectorDB
 class RAGChatbot:
     def __init__(self, vector_store):
         """
@@ -20,26 +20,25 @@ class RAGChatbot:
 
         # Prompt template
         self.prompt = ChatPromptTemplate.from_template("""
-Bạn là một trợ lý AI. Dưới đây là ngữ cảnh lấy từ tài liệu:
+You are an AI assistant that helps users by providing information from the given context.
 
 {context}
 
-Câu hỏi: {question}
+Question:  {question}
 
-Hãy trả lời thật chính xác dựa trên ngữ cảnh phía trên. 
-Nếu không tìm thấy câu trả lời trong tài liệu, hãy trả lời: "Không có thông tin trong tài liệu."
+Please provide a detailed and accurate answer based on the above context. If the context does not contain relevant information, respond with "I don't know."
 """)
 
     def build_prompt(self, question, docs):
         """
-        Ghép docs thành prompt input
+        Convert retrieved docs + question to prompt for LLM
         """
         context = "\n\n".join([f"[Source]\n{d.page_content}" for d in docs])
         return self.prompt.format(context=context, question=question)
 
     def ask(self, question: str):
         """
-        Nhận câu hỏi → retrieve docs → gọi LLM → trả lời
+        Receive question from user, return answer and sources
         """
         # Retrieve top-k docs
         docs = self.retriever.invoke(question)
@@ -47,7 +46,6 @@ Nếu không tìm thấy câu trả lời trong tài liệu, hãy trả lời: "
         # Build prompt
         prompt_to_llm = self.build_prompt(question, docs)
 
-        # Query LLM offline
         response = self.llm.invoke(prompt_to_llm)
 
         return {
@@ -55,26 +53,22 @@ Nếu không tìm thấy câu trả lời trong tài liệu, hãy trả lời: "
             "sources": docs
         }
 if __name__ == "__main__":
-    # 1. Load PDF
     url = "https://arxiv.org/pdf/1706.03762.pdf"
     loader = PDFLoader(url)
     docs = loader.load()
 
-    # 2. Tạo vectorDB
     rag_vector_db = RAGVectorDB(docs)
     rag_vector_db.build_vector_store()
 
-    # 3. Tạo chatbot
     bot = RAGChatbot(rag_vector_db.vector_store)
 
-    # 4. Hỏi thử
     question = "What is the main idea of the Transformer model?"
     print(question)
     result = bot.ask(question)
-    print("AI trả lời:")
+    print("Answer:")
     print(result["answer"])
 
-    print("\nNguồn tham chiếu:")
+    print("\nResources:")
     for i, d in enumerate(result["sources"]):
         print(f"[{i+1}] {d.metadata}")
 

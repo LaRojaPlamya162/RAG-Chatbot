@@ -3,7 +3,7 @@ from typing import List
 from langchain_core.documents import Document
 
 def remove_ununicode_character(text: str) -> str:
-    # Chỉ giữ lại ký tự ASCII (0–127)
+    # Only keep ASCII characters
     return ''.join([char if ord(char) < 128 else ' ' for char in text])
 
 class PDFLoader:
