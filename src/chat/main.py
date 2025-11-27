@@ -1,95 +1,96 @@
-from langchain_ollama import ChatOllama
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
 import json
 import os
 from src.base.main import RAGChatBot
+
+
 class ChatPipeline:
     """
-    Offline chatbot using Ollama + saving history to JSON file
+    Offline RAG chatbot using RAGChatBot() + saving history to JSON file
     """
 
-    def __init__(self, content: str = None):
-        self.bot = RAGChatBot(content)
-        # Load chat history from file
+    def __init__(self, history_file="chat_history.json"):
+        self.history_file = history_file
+
+        # Load the RAG-based chatbot
+        self.bot = RAGChatBot()
+
+        # Load saved history
         self.chat_history = self._load_history()
-        self.history_file = "chat_history.json"
-        # Create conversational chain with history support
-        self.conversational_chain = self._create_chain()
+
+    # ---------------------- HISTORY I/O ----------------------
 
     def _load_history(self) -> ChatMessageHistory:
-        """Read chat history from JSON file"""
+        """Load chat history from JSON file into ChatMessageHistory object."""
         history = ChatMessageHistory()
+
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    for msg in data:
-                        if msg["type"] == "human":
-                            history.add_message(HumanMessage(content=msg["content"]))
-                        elif msg["type"] == "ai":
-                            history.add_message(AIMessage(content=msg["content"]))
+
+                for msg in data:
+                    if msg["type"] == "human":
+                        history.add_message(HumanMessage(content=msg["content"]))
+                    elif msg["type"] == "ai":
+                        history.add_message(AIMessage(content=msg["content"]))
             except:
-                print(f"Không thể đọc file lịch sử {self.history_file}, bắt đầu mới.")
+                print(f"[WARN] Cannot read {self.history_file}. Starting fresh.")
+
         return history
 
     def _save_history(self):
-        """Save chat history to JSON file"""
-        messages = []
+        """Store history from ChatMessageHistory back to JSON file."""
+        data = []
+
         for msg in self.chat_history.messages:
             if isinstance(msg, HumanMessage):
-                messages.append({"type": "human", "content": msg.content})
+                data.append({"type": "human", "content": msg.content})
             elif isinstance(msg, AIMessage):
-                messages.append({"type": "ai", "content": msg.content})
+                data.append({"type": "ai", "content": msg.content})
 
         with open(self.history_file, "w", encoding="utf-8") as f:
-            json.dump(messages, f, ensure_ascii=False, indent=2)
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def _create_chain(self):
-        """Create conversational chain with history support"""
-        prompt = ChatPromptTemplate.from_messages([
-            MessagesPlaceholder(variable_name="history"),
-            ("human", "{input}"),
-        ])
+    # ---------------------- MAIN CHAT METHOD ----------------------
 
-        chain = prompt | self.rag_bot.llm
+    def ask(self, question: str):
+        """
+        User → history → RAGChatBot → answer → history
+        """
 
-        # Use RunnableWithMessageHistory to manage chat history
-        return RunnableWithMessageHistory(
-            chain,
-            lambda session_id: self.chat_history,  # return the same history for all sessions
-            input_messages_key="input",
-            history_messages_key="history",
-        )
+        if not question.strip():
+            return "Please enter a valid question!"
 
-    def ask(self, user_input: str) -> str:
-        """Send user input to chatbot, get response"""
-        if not user_input.strip():
-            return "Vui lòng nhập nội dung!"
+        # Save user's message
+        self.chat_history.add_message(HumanMessage(content=question))
 
-        response = self.conversational_chain.invoke(
-            {"input": user_input},
-            config={"configurable": {"session_id": "default"}}  # constant session_id
-        )
+        # Call your RAGChatBot (RAG retrieval + LLM answer)
+        answer, sources = self.bot.ask(question)
 
-        # save history after each interaction
+        # Save model answer to history
+        self.chat_history.add_message(AIMessage(content=answer))
+
+        # Persist file
         self._save_history()
 
-        return response.content
+        # Return full result
+        return {
+            "answer": answer,
+            "sources": sources,
+        }
+
+    # ---------------------- CLEAN HISTORY ----------------------
 
     def clear_history(self):
-        """Clear chat history both in memory and file"""
+        """Clear both file & in-memory chat history."""
         if os.path.exists(self.history_file):
             os.remove(self.history_file)
         self.chat_history.clear()
-        print("Chat history deleted.")
-
-
+        print("Chat history cleared.")
 if __name__ == "__main__":
-    url = "https://arxiv.org/pdf/1706.03762.pdf"
-    chat = ChatPipeline(content=url)
+    chat = ChatPipeline()
     print("=== Offline Chatbot with Ollama ===")
     print("Type exit for escape, type 'clear' for history deleting\n")
 
@@ -107,5 +108,6 @@ if __name__ == "__main__":
 
         print("Bot:", end=" ")
         response = chat.ask(user_msg)
-        print(response)
-        print() 
+        print(response["answer"])
+        print('/n')
+        print(response["sources"])

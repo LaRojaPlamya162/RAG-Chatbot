@@ -4,12 +4,12 @@ from langchain_core.documents import Document
 from src.base.file_loader import PDFLoader
 from src.base.vector_db import RAGVectorDB
 class LLMRetriver:
-    def __init__(self):
+    def __init__(self, vector_store_dir: str = "./src/sources/vector_store"):
         """
         vector_store: InMemoryVectorStore đã build xong
         """
-        self.vector_store = RAGVectorDB.load("../sources/vector_store").vector_store
-        self.retriever = self.vector_stroe.as_retriever(search_kwargs={"k": 3})
+        self.vector_store = RAGVectorDB.load(vector_store_dir).vector_store
+        self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
 
         # LLM offline
         self.llm = ChatOllama(
@@ -54,14 +54,16 @@ Please provide a detailed and accurate answer based on the above context. If the
             "sources": docs
         }
 if __name__ == "__main__":
-    url = "https://arxiv.org/pdf/1706.03762.pdf"
-    loader = PDFLoader([url])
-    docs = loader.load()
+    #url = "https://arxiv.org/pdf/1706.03762.pdf"
+    #loader = PDFLoader([url])
+    #docs = loader.load()
 
-    rag_vector_db = RAGVectorDB(docs).load("./src/sources/vector_store")
-
-    bot = LLMRetriver(rag_vector_db.vector_store)
-
+    #rag_vector_db = RAGVectorDB(docs).load("./src/sources/vector_store")
+    #rag_vector_db = RAGVectorDB(docs)
+    #rag_vector_db.build_vector_store()
+    
+    #bot = LLMRetriver(rag_vector_db.vector_store)
+    bot = LLMRetriver()
     question = "What is the main idea of the Transformer model?"
     print(question)
     result = bot.ask(question)
