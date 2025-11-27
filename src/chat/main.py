@@ -5,24 +5,17 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 import json
 import os
-from src.base.offline_rag import RAGChatbot
-from src.base.vector_db import RAGVectorDB
-from src.base.file_loader import PDFLoader
-
+from src.base.main import RAGChatBot
 class ChatPipeline:
     """
     Offline chatbot using Ollama + saving history to JSON file
     """
 
-    def __init__(self, model_name: str = "qwen2.5:1.5b-instruct", history_file: str = "chat_history.json", vector_store=None):
-        self.model_name = model_name
-        self.history_file = history_file
-        # LLM offline + RAG chatbot
-        self.rag_bot = RAGChatbot(vector_store=vector_store)  
-
+    def __init__(self, content: str = None):
+        self.bot = RAGChatBot(content)
         # Load chat history from file
         self.chat_history = self._load_history()
-
+        self.history_file = "chat_history.json"
         # Create conversational chain with history support
         self.conversational_chain = self._create_chain()
 
@@ -96,12 +89,7 @@ class ChatPipeline:
 
 if __name__ == "__main__":
     url = "https://arxiv.org/pdf/1706.03762.pdf"
-    loader = PDFLoader(url)
-    docs = loader.load()
-    rag_vector_db = RAGVectorDB(docs)
-    rag_vector_db.build_vector_store()
-    chat = ChatPipeline(model_name="qwen2.5:1.5b-instruct", vector_store=rag_vector_db.vector_store) 
-
+    chat = ChatPipeline(content=url)
     print("=== Offline Chatbot with Ollama ===")
     print("Type exit for escape, type 'clear' for history deleting\n")
 

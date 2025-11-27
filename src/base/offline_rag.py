@@ -3,13 +3,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from src.base.file_loader import PDFLoader
 from src.base.vector_db import RAGVectorDB
-class RAGChatbot:
-    def __init__(self, vector_store):
+class LLMRetriver:
+    def __init__(self):
         """
         vector_store: InMemoryVectorStore đã build xong
         """
-        self.vector_store = vector_store
-        self.retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        self.vector_store = RAGVectorDB.load("../sources/vector_store").vector_store
+        self.retriever = self.vector_stroe.as_retriever(search_kwargs={"k": 3})
 
         # LLM offline
         self.llm = ChatOllama(
@@ -40,6 +40,7 @@ Please provide a detailed and accurate answer based on the above context. If the
         """
         Receive question from user, return answer and sources
         """
+        print("Retrieving relevant documents...")
         # Retrieve top-k docs
         docs = self.retriever.invoke(question)
 
@@ -54,13 +55,12 @@ Please provide a detailed and accurate answer based on the above context. If the
         }
 if __name__ == "__main__":
     url = "https://arxiv.org/pdf/1706.03762.pdf"
-    loader = PDFLoader(url)
+    loader = PDFLoader([url])
     docs = loader.load()
 
-    rag_vector_db = RAGVectorDB(docs)
-    rag_vector_db.build_vector_store()
+    rag_vector_db = RAGVectorDB(docs).load("./src/sources/vector_store")
 
-    bot = RAGChatbot(rag_vector_db.vector_store)
+    bot = LLMRetriver(rag_vector_db.vector_store)
 
     question = "What is the main idea of the Transformer model?"
     print(question)
