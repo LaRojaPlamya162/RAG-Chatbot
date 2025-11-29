@@ -4,11 +4,16 @@ from langchain_core.documents import Document
 from src.base.file_loader import PDFLoader
 from src.base.vector_db import RAGVectorDB
 class LLMRetriver:
-    def __init__(self, vector_store_dir: str = "./src/sources/vector_store"):
+    #def __init__(self, vector_store_dir: str = "./src/sources/vector_store"):
+    def __init__(self, vector_store: None):
         """
         vector_store: InMemoryVectorStore đã build xong
         """
-        self.vector_store = RAGVectorDB.load(vector_store_dir).vector_store
+        if vector_store is not None:
+            self.vector_store = vector_store
+        else:
+            self.vector_store = RAGVectorDB.load("./src/sources/vector_store").vector_store
+        
         self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
 
         # LLM offline

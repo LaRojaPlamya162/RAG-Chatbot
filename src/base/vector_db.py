@@ -7,6 +7,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.base.file_loader import PDFLoader
+from src.sources.content import ContentSources
 
 class RAGVectorDB:
     def __init__(self, documents: List[Document]):
@@ -77,8 +78,8 @@ class RAGVectorDB:
         return obj
 
 if __name__ == "__main__":
-    url = "https://arxiv.org/pdf/1706.03762.pdf"
-    loader = PDFLoader([url])
+    #url = "https://arxiv.org/pdf/1706.03762.pdf"
+    loader = PDFLoader(ContentSources().get_pdf_urls())
     docs = loader.load()
     rag_vector_db = RAGVectorDB(docs)
     rag_vector_db.build_vector_store()

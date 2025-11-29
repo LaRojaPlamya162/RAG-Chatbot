@@ -49,5 +49,17 @@ class ContentSources:
           "title": "UNSUPERVISED REPRESENTATION LEARNING WITH DEEP CONVOLUTIONAL GENERATIVE ADVERSARIAL NETWORKS",
           "url": "https://arxiv.org/pdf/1511.06434"
       },
+      {
+          "title": "OFFLINE REINFORCEMENT LEARNING WITH IMPLICIT Q-LEARNING",
+          "url": "https://arxiv.org/pdf/2110.06169"
+      },
+      {
+         "title": "PAPER2CODE: AUTOMATING CODE GENERATION FROM SCIENTIFIC PAPERS IN MACHINE LEARNING",
+         "url": "https://arxiv.org/pdf/2504.17192"
+      }
     ]
+    def get_pdf_urls(self):
+       return [item['url'] for item in self.file_links]
 
+if __name__ == "__main__":
+   print(ContentSources().get_pdf_urls())
