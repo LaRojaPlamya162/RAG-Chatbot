@@ -56,6 +56,14 @@ class ContentSources:
       {
          "title": "PAPER2CODE: AUTOMATING CODE GENERATION FROM SCIENTIFIC PAPERS IN MACHINE LEARNING",
          "url": "https://arxiv.org/pdf/2504.17192"
+      },
+      {
+         "title": "Native Parallel Reasoner: Reasoning in Parallelism via Self-Distilled Reinforcement Learning",
+         "url": "https://www.arxiv.org/pdf/2512.07461"
+      },
+      {
+         "title": "Conservative Q-Learning for Offline Reinforcement Learning",
+         "url": "https://arxiv.org/abs/2006.04779"
       }
     ]
     def get_pdf_urls(self):

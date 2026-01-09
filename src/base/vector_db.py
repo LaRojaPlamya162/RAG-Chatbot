@@ -4,8 +4,9 @@ import json
 import numpy as np
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_core.vectorstores import InMemoryVectorStore
+from langchain_core.vectorstores import InMemoryVectorStore, Faiss
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.docstore.in_memory import InMemoryDocstore
 from src.base.file_loader import PDFLoader
 from src.sources.content import ContentSources
 
@@ -13,7 +14,17 @@ class RAGVectorDB:
     def __init__(self, documents: List[Document]):
         self.documents = documents
         self.embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-        self.vector_store = InMemoryVectorStore(embedding=self.embeddings)
+        self.embeddings_dim = len(self.embeddings.embed_query("test"))
+        self.index = Faiss.IndexFlatL2(self.embeddings_dim)
+
+        #self.vector_store = InMemoryVectorStore(embedding=self.embeddings)
+        self.vector_store = Faiss(
+            embedding_function=self.embeddings,
+            index=self.index,
+            in_memory_docstore=InMemoryDocstore(),
+            index_to_docstore_id={},
+
+        )
 
     def chunking(self, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
         """Chunk documents into smaller pieces from better retrieval."""
